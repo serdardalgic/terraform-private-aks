@@ -1,12 +1,3 @@
-terraform {
-  required_version = ">= 0.12"
-}
-
-provider "azurerm" {
-  version = "~>2.5" //outbound_type https://github.com/terraform-providers/terraform-provider-azurerm/blob/v2.5.0/CHANGELOG.md
-  features {}
-}
-
 resource "azurerm_resource_group" "vnet" {
   name     = var.vnet_resource_group_name
   location = var.location
