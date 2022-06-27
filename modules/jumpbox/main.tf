@@ -69,10 +69,11 @@ resource "azurerm_linux_virtual_machine" "jumpbox" {
     storage_account_type = "Premium_LRS"
   }
 
+  # See https://github.com/Azure/azure-cli/issues/13320
   source_image_reference {
-    publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "16.04.0-LTS"
+    publisher = "canonical"
+    offer     = "0001-com-ubuntu-server-focal"
+    sku       = "20_04-lts-gen2"
     version   = "latest"
   }
 
