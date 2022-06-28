@@ -1,6 +1,7 @@
 resource "azurerm_resource_group" "vnet" {
   name     = var.vnet_resource_group_name
   location = var.location
+  # TODO: Tag Resources in a more general way
   tags = {
     env       = "serdar-test"
     ManagedBy = "serdar.dalgic@enterprisedb.com"
@@ -16,6 +17,9 @@ resource "azurerm_resource_group" "kube" {
   }
 }
 
+########################################
+# Virtual Networks
+########################################
 module "hub_network" {
   source              = "./modules/vnet"
   resource_group_name = azurerm_resource_group.vnet.name
@@ -48,6 +52,9 @@ module "kube_network" {
   ]
 }
 
+########################################
+# Virtual Network Peering
+########################################
 module "vnet_peering" {
   source              = "./modules/vnet_peering"
   vnet_1_name         = var.hub_vnet_name
@@ -60,6 +67,9 @@ module "vnet_peering" {
   peering_name_2_to_1 = "Spoke1ToHub"
 }
 
+########################################
+# Firewall
+########################################
 module "firewall" {
   source         = "./modules/firewall"
   resource_group = azurerm_resource_group.vnet.name
@@ -69,6 +79,9 @@ module "firewall" {
   subnet_id      = module.hub_network.subnet_ids["AzureFirewallSubnet"]
 }
 
+########################################
+# Route Table
+########################################
 module "routetable" {
   source             = "./modules/route_table"
   resource_group     = azurerm_resource_group.vnet.name
@@ -79,63 +92,30 @@ module "routetable" {
   subnet_id          = module.kube_network.subnet_ids["aks-subnet"]
 }
 
-data "azurerm_kubernetes_service_versions" "current" {
-  location       = var.location
-  version_prefix = var.kube_version_prefix
-}
+########################################
+# Private Kubernetes Cluster
+########################################
 
-resource "azurerm_kubernetes_cluster" "privateaks" {
-  name                    = "private-aks"
-  location                = var.location
-  kubernetes_version      = data.azurerm_kubernetes_service_versions.current.latest_version
-  resource_group_name     = azurerm_resource_group.kube.name
-  dns_prefix              = "private-aks"
-  private_cluster_enabled = true
+module "kubernetes_cluster" {
+  source              = "./modules/private-aks"
+  location            = var.location
+  resource_group_name = azurerm_resource_group.kube.name
+  subnet_id           = module.kube_network.subnet_ids["aks-subnet"]
 
-  default_node_pool {
-    name                = "default"
-    node_count          = var.nodepool_nodes_count
-    vm_size             = var.nodepool_vm_size
-    vnet_subnet_id      = module.kube_network.subnet_ids["aks-subnet"]
-    min_count           = var.nodepool_min_count
-    max_count           = var.nodepool_max_count
-    enable_auto_scaling = true
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  network_profile {
-    docker_bridge_cidr = var.network_docker_bridge_cidr
-    dns_service_ip     = var.network_dns_service_ip
-    network_plugin     = "azure"
-    outbound_type      = "userDefinedRouting"
-    service_cidr       = var.network_service_cidr
-  }
-
-  # When auto_scaling is enabled, ignore changes in the node count.
-  lifecycle {
-    ignore_changes = [
-      default_node_pool[0].node_count,
-    ]
-  }
-
+  # To be able to set the userDefinedRouting outbound type,
+  #   route table should be created beforehand
   depends_on = [module.routetable]
 }
 
-resource "azurerm_role_assignment" "netcontributor" {
-  role_definition_name = "Network Contributor"
-  scope                = module.kube_network.subnet_ids["aks-subnet"]
-  principal_id         = azurerm_kubernetes_cluster.privateaks.identity[0].principal_id
-}
-
+########################################
+# Jumpbox
+########################################
 module "jumpbox" {
   source                  = "./modules/jumpbox"
   location                = var.location
   resource_group          = azurerm_resource_group.vnet.name
   vnet_id                 = module.hub_network.vnet_id
   subnet_id               = module.hub_network.subnet_ids["jumpbox-subnet"]
-  dns_zone_name           = join(".", slice(split(".", azurerm_kubernetes_cluster.privateaks.private_fqdn), 1, length(split(".", azurerm_kubernetes_cluster.privateaks.private_fqdn))))
-  dns_zone_resource_group = azurerm_kubernetes_cluster.privateaks.node_resource_group
+  dns_zone_name           = join(".", slice(split(".", module.kubernetes_cluster.private_fqdn), 1, length(split(".", module.kubernetes_cluster.private_fqdn))))
+  dns_zone_resource_group = module.kubernetes_cluster.node_resource_group
 }
