@@ -21,7 +21,7 @@ resource "azurerm_resource_group" "kube" {
 # Virtual Networks
 ########################################
 module "hub_network" {
-  source              = "./modules/vnet"
+  source              = "../../modules/vnet"
   resource_group_name = azurerm_resource_group.vnet.name
   location            = var.location
   vnet_name           = var.hub_vnet_name
@@ -39,7 +39,7 @@ module "hub_network" {
 }
 
 module "kube_network" {
-  source              = "./modules/vnet"
+  source              = "../../modules/vnet"
   resource_group_name = azurerm_resource_group.kube.name
   location            = var.location
   vnet_name           = var.kube_vnet_name
@@ -56,7 +56,7 @@ module "kube_network" {
 # Virtual Network Peering
 ########################################
 module "vnet_peering" {
-  source              = "./modules/vnet_peering"
+  source              = "../../modules/vnet_peering"
   vnet_1_name         = var.hub_vnet_name
   vnet_1_id           = module.hub_network.vnet_id
   vnet_1_rg           = azurerm_resource_group.vnet.name
@@ -71,7 +71,7 @@ module "vnet_peering" {
 # Firewall
 ########################################
 module "firewall" {
-  source         = "./modules/firewall"
+  source         = "../../modules/firewall"
   resource_group = azurerm_resource_group.vnet.name
   location       = var.location
   pip_name       = "azureFirewalls-ip"
@@ -83,7 +83,7 @@ module "firewall" {
 # Route Table
 ########################################
 module "routetable" {
-  source             = "./modules/route_table"
+  source             = "../../modules/route_table"
   resource_group     = azurerm_resource_group.vnet.name
   location           = var.location
   rt_name            = "kubenetfw_fw_rt"
@@ -97,7 +97,7 @@ module "routetable" {
 ########################################
 
 module "kubernetes_cluster" {
-  source              = "./modules/private-aks"
+  source              = "../../modules/private-aks"
   location            = var.location
   resource_group_name = azurerm_resource_group.kube.name
   subnet_id           = module.kube_network.subnet_ids["aks-subnet"]
@@ -111,7 +111,7 @@ module "kubernetes_cluster" {
 # Jumpbox
 ########################################
 module "jumpbox" {
-  source                  = "./modules/jumpbox"
+  source                  = "../../modules/jumpbox"
   location                = var.location
   resource_group          = azurerm_resource_group.vnet.name
   vnet_id                 = module.hub_network.vnet_id
