@@ -12,4 +12,10 @@ terraform {
       version = "~> 2.5" //outbound_type https://github.com/terraform-providers/terraform-provider-azurerm/blob/v2.5.0/CHANGELOG.md
     }
   }
+  backend "azurerm" {
+    resource_group_name  = "serdar_dev"
+    storage_account_name = "serdartfstatestorage"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+  }
 }
