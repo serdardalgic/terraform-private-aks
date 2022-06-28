@@ -7,3 +7,9 @@ output "jumpbox_password" {
   value       = module.jumpbox.jumpbox_password
   sensitive   = true
 }
+
+output "kube_config" {
+  value       = azurerm_kubernetes_cluster.privateaks.kube_config_raw
+  description = "Copy this kube_config to Jumpbox in order to interact with the private Kubernetes cluster"
+  sensitive   = true
+}
