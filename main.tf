@@ -85,10 +85,13 @@ resource "azurerm_kubernetes_cluster" "privateaks" {
   private_cluster_enabled = true
 
   default_node_pool {
-    name           = "default"
-    node_count     = var.nodepool_nodes_count
-    vm_size        = var.nodepool_vm_size
-    vnet_subnet_id = module.kube_network.subnet_ids["aks-subnet"]
+    name                = "default"
+    node_count          = var.nodepool_nodes_count
+    vm_size             = var.nodepool_vm_size
+    vnet_subnet_id      = module.kube_network.subnet_ids["aks-subnet"]
+    min_count           = var.nodepool_min_count
+    max_count           = var.nodepool_max_count
+    enable_auto_scaling = true
   }
 
   identity {
@@ -101,6 +104,13 @@ resource "azurerm_kubernetes_cluster" "privateaks" {
     network_plugin     = "azure"
     outbound_type      = "userDefinedRouting"
     service_cidr       = var.network_service_cidr
+  }
+
+  # When auto_scaling is enabled, ignore changes in the node count.
+  lifecycle {
+    ignore_changes = [
+      default_node_pool[0].node_count,
+    ]
   }
 
   depends_on = [module.routetable]
