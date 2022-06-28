@@ -9,13 +9,13 @@ variable location {
 }
 
 variable pip_name {
-  description = "Firewal public IP name"
+  description = "Firewall public IP name"
   type        = string
   default     = "azure-fw-ip"
 }
 
 variable fw_name {
-  description = "Firewal name"
+  description = "Firewall name"
   type        = string
 }
 
