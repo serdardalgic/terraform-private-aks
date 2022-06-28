@@ -1,11 +1,19 @@
 resource "azurerm_resource_group" "vnet" {
   name     = var.vnet_resource_group_name
   location = var.location
+  tags = {
+    env       = "serdar-test"
+    ManagedBy = "serdar.dalgic@enterprisedb.com"
+  }
 }
 
 resource "azurerm_resource_group" "kube" {
   name     = var.kube_resource_group_name
   location = var.location
+  tags = {
+    env       = "serdar-test"
+    ManagedBy = "serdar.dalgic@enterprisedb.com"
+  }
 }
 
 module "hub_network" {
