@@ -33,6 +33,16 @@ variable "nodepool_nodes_count" {
   default     = 1
 }
 
+variable "nodepool_min_count" {
+  description = "Minimum count for the nodepool nodes, used within autoscaling"
+  default     = 1
+}
+
+variable "nodepool_max_count" {
+  description = "Maximum count for the nodepool nodes, used within autoscaling"
+  default     = 2
+}
+
 variable "nodepool_vm_size" {
   description = "Default nodepool VM size"
   default     = "Standard_D2_v2"
