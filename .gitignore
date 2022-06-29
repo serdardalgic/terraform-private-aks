@@ -45,4 +45,8 @@ terraform.rc
 # See: https://terragrunt.gruntwork.io/docs/reference/cli-options/#terragrunt-debug
 terragrunt-debug.tfvars.json
 
+# Ignore terragrunt-created files
+environments/**/backend.tf
+environments/**/provider.tf
+
 # End of https://www.toptal.com/developers/gitignore/api/terraform,terragrunt
