@@ -1,5 +1,6 @@
 locals {
-  subscription_id            = "c80801ad-55a3-41b1-8ace-6dfc1941b712"
+  subscription_id_default            = "c80801ad-55a3-41b1-8ace-6dfc1941b712"
+  subscription_id                    = get_env("AZURE_SUBSCRIPTION_ID", "${local.subscription_id_default}")
 }
 
 # Inject this provider configuration in all the modules that includes the root file
